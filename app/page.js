@@ -5,28 +5,36 @@ import { useState, useEffect } from "react";
 export default function Home() {
   const [notes, setNotes] = useState([]);
   const [text, setText] = useState("");
-  const [loaded, setLoaded] = useState(false);
 
-  // Load saved notes once, when the page first opens
+  // Load notes from the API when the page opens
   useEffect(() => {
-    const saved = localStorage.getItem("notes");
-    if (saved) setNotes(JSON.parse(saved));
-    setLoaded(true);
+    fetch("/api/notes")
+      .then((res) => res.json())
+      .then(setNotes);
   }, []);
 
-  // Save notes whenever they change (after the first load)
-  useEffect(() => {
-    if (loaded) localStorage.setItem("notes", JSON.stringify(notes));
-  }, [notes, loaded]);
-
-  function addNote(e) {
+  async function addNote(e) {
     e.preventDefault();
     if (!text.trim()) return;
-    setNotes([...notes, { id: Date.now(), text: text.trim() }]);
+
+    const res = await fetch("/api/notes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    const newNote = await res.json();
+
+    setNotes([...notes, newNote]);
     setText("");
   }
 
-  function deleteNote(id) {
+  async function deleteNote(id) {
+    await fetch("/api/notes", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+
     setNotes(notes.filter((note) => note.id !== id));
   }
 
