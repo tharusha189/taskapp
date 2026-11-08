@@ -39,3 +39,16 @@ export async function DELETE(request) {
   await writeNotes(notes.filter((n) => n.id !== id));
   return NextResponse.json({ success: true });
 }
+
+export async function PUT(request) {
+  const { id, text } = await request.json();
+  if (!text || !text.trim()) {
+    return NextResponse.json({ error: "Text is required" }, { status: 400 });
+  }
+  const notes = await readNotes();
+  const updated = notes.map((n) =>
+    n.id === id ? { ...n, text: text.trim() } : n
+  );
+  await writeNotes(updated);
+  return NextResponse.json({ success: true });
+}
